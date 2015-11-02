@@ -22,6 +22,13 @@ orientation = {'candidate': unit_quat([1,0,0,0]),
                'red': unit_quat([1,1,1,0])}
 
 
+def identify_candidate_grains(quaternions):
+    """ candidate grains have one nonzero quaternion component
+    return an array of candidate grains """
+    candidates = np.where(np.sum(quaternions, axis=1) == 1)[0]
+    return candidates
+
+
 def random_binary_texture(grains, candidates=[1], red_probability=0.0):
     """ binary texture components that work with cutoff angle of 50 degrees """
     max_grain = np.max(grains)
