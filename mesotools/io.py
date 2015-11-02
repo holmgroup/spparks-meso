@@ -1,4 +1,13 @@
-""" simple HDF5 i/o routines (DREAM3D format) """
+# -*- coding: utf-8 -*-
+"""
+    mesotools.io
+    ~~~~~~~~~~~~
+
+    This module provides simple HDF5 i/o routines for DREAM3D microstructures
+
+    :copyright: (c) 2015 by Brian DeCost
+    :license: MIT, see LICENSE for more details.
+"""
 
 import numpy as np
 import h5py

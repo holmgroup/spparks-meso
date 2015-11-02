@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+    mesotools.binary
+    ~~~~~~~~~~~~~~~~
+
+    This module provides tools for Brian's binary-texture simulations.
+
+    :copyright: (c) 2015 by Brian DeCost
+    :license: MIT, see LICENSE for more details.
+"""
+
 import numpy as np
 from skimage.segmentation import mark_boundaries
 

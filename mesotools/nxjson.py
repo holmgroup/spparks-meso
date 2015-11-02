@@ -1,12 +1,17 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
-  nxmatlab: dump a networkx dataset to a json format
-    that can be parsed by MATLAB into the matlab format 
-    used by Karsten Borgwardt (using nxjson.m)
+    mesotools.nxjson
+    ~~~~~~~~~~~~~~~~
 
-  issue: not sure arbitrary integer keys are going to work.
-    KB's example datasets are contiguous 1--N float64s
+    This module provides json serialization for use with Karsten Borgwardt's matlab code
+
+    :copyright: (c) 2015 by Brian DeCost
+    :license: MIT, see LICENSE for more details.
 """
+
+#   issue: not sure arbitrary integer keys are going to work.
+#    KB's example datasets are contiguous 1--N float64s
+
 import json
 import numpy as np
 import networkx as nx

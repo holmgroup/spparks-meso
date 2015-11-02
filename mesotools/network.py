@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+    mesotools.network
+    ~~~~~~~~~~~~~~~~~
+
+    This module provides tools for extracting the transgranular network from polycrystals.
+
+    :copyright: (c) 2015 by Brian DeCost
+    :license: MIT, see LICENSE for more details.
+"""
+
 import numpy as np
 import networkx as nx
 from scipy import ndimage
