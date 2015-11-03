@@ -48,6 +48,11 @@ def load_quaternions(path):
         quaternions = np.array(f[QUAT_PATH], dtype=np.float32)
     return quaternions
 
+def get_dimensionality(path):
+    with h5py.File(path, 'r') as f:
+        shape = f[GRAIN_ID_PATH].shape
+        return len(shape)
+
 def dream3d_to_sites(dream3d_path, sites_path):
     """ convert DREAM3D microstructure to SPPARKS sites format """
     grains = load_dream3d(dream3d_path)
