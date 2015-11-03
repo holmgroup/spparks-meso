@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    mesotools.nxjson
-    ~~~~~~~~~~~~~~~~
+    meso.nxjson
+    ~~~~~~~~~~~
 
     This module provides json serialization for use with Karsten Borgwardt's matlab code
 

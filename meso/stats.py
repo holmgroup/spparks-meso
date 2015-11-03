@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    mesotools.stats
-    ~~~~~~~~~~~~~~~~~
+    meso.stats
+    ~~~~~~~~~~
 
     This module provides tools for analyzing grain growth simulations.
 

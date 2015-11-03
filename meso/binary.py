@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    mesotools.binary
-    ~~~~~~~~~~~~~~~~
+    meso.binary
+    ~~~~~~~~~~~
 
     This module provides tools for Brian's binary-texture simulations.
 

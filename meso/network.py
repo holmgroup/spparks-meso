@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    mesotools.network
-    ~~~~~~~~~~~~~~~~~
+    meso.network
+    ~~~~~~~~~~~~
 
     This module provides tools for extracting the transgranular network from polycrystals.
 

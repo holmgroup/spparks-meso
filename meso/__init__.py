@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    mesotools
-    ~~~~~~~~~
+    meso
+    ~~~~
 
     Tools for working with polycrystalline microstructure models.
 

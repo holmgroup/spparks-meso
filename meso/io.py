@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    mesotools.io
-    ~~~~~~~~~~~~
+    meso.io
+    ~~~~~~~
 
     This module provides simple HDF5 i/o routines for DREAM3D microstructures
 
