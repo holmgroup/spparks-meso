@@ -43,6 +43,12 @@ def save_dream3d(path, grains, quaternions):
     return
 
 
+def add_attribute(path, attr_name, attr):
+    with h5py.File(path, 'r+') as f:
+        f.attrs[attr_name] = attr
+    return
+
+
 def load_quaternions(path):
     with h5py.File(path, 'r') as f:
         quaternions = np.array(f[QUAT_PATH], dtype=np.float32)
