@@ -9,9 +9,6 @@
     :license: MIT, see LICENSE for more details.
 """
 
-
-#!/usr/bin/env python
-
 import click
 import numpy as np
 
@@ -29,7 +26,7 @@ def equivalent_grain_radius(grains):
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('-i', '--infile', default='synthetic.dream3d', type=click.Path(), help='input file')
+@click.argument('infile', type=click.Path(exists=True))
 @click.option('-o', '--outfile', default='initial_candidate.dream3d', type=click.Path(), help='output file')
 @click.option('-s', '--size', default=0, type=float, help='specify minimum relative candidate grain size')
 @click.option('-r', '--redprob', default=0.3, type=float, help='fraction of red type grains')
