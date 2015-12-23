@@ -12,7 +12,7 @@
     
 import click
 
-from meso.scripts import candidate, visualize
+from meso.scripts import candidate, visualize, networks
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -23,3 +23,4 @@ def cli():
 cli.add_command(candidate.candidate)
 cli.add_command(visualize.draw)
 cli.add_command(visualize.animate)
+cli.add_command(networks.networks)
