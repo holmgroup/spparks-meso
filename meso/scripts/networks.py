@@ -15,6 +15,7 @@ import click
 import numpy as np
 
 import meso.io
+import meso.network
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
