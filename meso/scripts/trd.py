@@ -47,6 +47,7 @@ def trd(infile, outfile, size, count, prob, shuffle):
         queue = deque(network.neighbors(seed))
         while len(queue) > 0:
             candidate = queue.popleft()
+            visited.add(candidate)
             if colors[candidate] != 0:
                 # sometimes skip grains that are already part of a different TRD
                 if np.random.uniform() < 0.5:
@@ -56,7 +57,7 @@ def trd(infile, outfile, size, count, prob, shuffle):
                 colors[candidate] = id_trd
                 for neigh in network.neighbors(candidate):
                     if neigh not in visited:
-                        visited.add(neigh)
+                        # visited.add(neigh)
                         queue.append(neigh)
                 
     meso.io.save_dream3d(outfile, grain_ids, colors=colors)

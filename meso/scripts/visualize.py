@@ -38,7 +38,7 @@ def render_microstructure(infile, initial=None, colorscheme='none'):
         for grain_idx in np.unique(grains):
             im[grains == grain_idx] = cmap[texture_components[grain_idx]]
         boundaries = find_boundaries(grains)
-        im[boundaries] = -1
+        im[boundaries] = -4
 
     return im
 
