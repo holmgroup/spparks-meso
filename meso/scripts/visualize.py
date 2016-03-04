@@ -14,31 +14,45 @@ import click
 import subprocess
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage.segmentation import mark_boundaries
+from skimage.segmentation import mark_boundaries, find_boundaries
 
 import meso.io
 from meso.binary import colors
+
+def render_microstructure(grains):
+    return im
+
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('infile', type=click.Path(exists=True))
 @click.option('-o', '--outfile', default='', type=click.Path(), help='output file')
-@click.option('-c', '--colors', default='none', type=click.Choice(['none', 'binary', 'quaternion']))
+@click.option('-c', '--colors', default='none', type=click.Choice(['none', 'binary', 'quaternion', 'discrete']))
 @click.option('-d', '--display', is_flag=True, help='show the microstructure in an X window')
 def draw(infile, outfile, colors, display):
     """ Draw a 2D microstructure from the Dream3d INFILE"""
 
     grains = meso.io.load_dream3d(infile)
-    quats = meso.io.load_quaternions(infile)
 
     if colors == 'none':
         im = grains / np.max(grains)
+        im = mark_boundaries(im, grains, color=[0,0,0])
     elif colors == 'binary':
+        quats = meso.io.load_quaternions(infile)
         im = meso.binary.colors(grains, quats)
+        im = mark_boundaries(im, grains, color=[0,0,0])
     elif colors == 'quaternion':
+        quats = meso.io.load_quaternions(infile)
         raise NotImplementedError('quaternion color scheme not yet implemented')
-    
-    im = mark_boundaries(im, grains, color=[0,0,0])
+    elif colors == 'discrete':
+        texture_components = meso.io.load_colors(infile)
+        cmap = {idx: c for idx, c in enumerate(np.unique(texture_components))}
+        im = np.zeros_like(grains)
+        for grain_idx in np.unique(grains):
+            im[grains == grain_idx] = cmap[texture_components[grain_idx]]
+        boundaries = find_boundaries(grains)
+        im[boundaries] = -1
+
     plt.imshow(im, interpolation='none', origin='lower')
 
     if outfile is not '':

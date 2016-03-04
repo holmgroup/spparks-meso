@@ -15,6 +15,7 @@ import h5py
 DATA_PATH = 'DataContainers/SyntheticVolume'
 GRAIN_ID_PATH = DATA_PATH + '/CellData/FeatureIds'
 QUAT_PATH = DATA_PATH + '/CellFeatureData/AvgQuats'
+COLOR_PATH = DATA_PATH + '/CellFeatureData/Color'
 DIM_PATH = DATA_PATH+'/DIMENSIONS'
 
 def load_dream3d(path, renumber_grains=False):
@@ -34,11 +35,14 @@ def renumber(grains, start_from=1):
     return new_grains
 
 
-def save_dream3d(path, grains, quaternions):
+def save_dream3d(path, grains, quaternions=None, colors=None):
     with h5py.File(path, 'w') as f:
         f.attrs['FileVersion'] = np.string_('6.0\x00')
         f[GRAIN_ID_PATH] = grains
-        f[QUAT_PATH] = quaternions
+        if quaternions is not None:
+            f[QUAT_PATH] = quaternions
+        if colors is not None:
+            f[COLOR_PATH] = colors
         f[DIM_PATH] = np.array([s for s in grains.shape])
     return
 
@@ -54,11 +58,20 @@ def load_quaternions(path):
         quaternions = np.array(f[QUAT_PATH], dtype=np.float32)
     return quaternions
 
+
+def load_colors(path):
+    """ Discrete label for a grain, as in texture component membership """
+    with h5py.File(path, 'r') as f:
+        colors = np.array(f[COLOR_PATH], dtype=np.float32)
+    return colors
+
+
 def get_dimensionality(path):
     with h5py.File(path, 'r') as f:
         shape = f[GRAIN_ID_PATH].shape
         return len(shape)
 
+    
 def dream3d_to_sites(dream3d_path, sites_path):
     """ convert DREAM3D microstructure to SPPARKS sites format """
     grains = load_dream3d(dream3d_path)
