@@ -45,13 +45,17 @@ def render_microstructure(infile, initial=None, colorscheme='none'):
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('infile', type=click.Path(exists=True))
+@click.option('-i', '--initial', type=click.Path(exists=True), default=None)
 @click.option('-o', '--outfile', default='', type=click.Path(), help='output file')
 @click.option('-c', '--colorscheme', default='none', type=click.Choice(['none', 'binary', 'quaternion', 'discrete']))
 @click.option('-d', '--display', is_flag=True, help='show the microstructure in an X window')
-def draw(infile, outfile, colorscheme, display):
+def draw(infile, initial, outfile, colorscheme, display):
     """ Draw a 2D microstructure from the Dream3d INFILE"""
 
-    im = render_microstructure(infile, initial=infile, colorscheme=colorscheme)
+    if initial is None:
+        initial = infile
+    
+    im = render_microstructure(infile, initial=initial, colorscheme=colorscheme)
     plt.imshow(im, interpolation='none', origin='lower')
 
     if outfile is not '':
