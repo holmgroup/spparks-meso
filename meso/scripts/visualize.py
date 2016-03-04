@@ -19,33 +19,20 @@ from skimage.segmentation import mark_boundaries, find_boundaries
 import meso.io
 from meso.binary import colors
 
-def render_microstructure(grains):
-    return im
-
-
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.argument('infile', type=click.Path(exists=True))
-@click.option('-o', '--outfile', default='', type=click.Path(), help='output file')
-@click.option('-c', '--colors', default='none', type=click.Choice(['none', 'binary', 'quaternion', 'discrete']))
-@click.option('-d', '--display', is_flag=True, help='show the microstructure in an X window')
-def draw(infile, outfile, colors, display):
-    """ Draw a 2D microstructure from the Dream3d INFILE"""
-
+def render_microstructure(infile, initial=None, colorscheme='none'):
     grains = meso.io.load_dream3d(infile)
-
-    if colors == 'none':
+    if colorscheme == 'none':
         im = grains / np.max(grains)
         im = mark_boundaries(im, grains, color=[0,0,0])
-    elif colors == 'binary':
-        quats = meso.io.load_quaternions(infile)
+    elif colorscheme == 'binary':
+        quats = meso.io.load_quaternions(initial)
         im = meso.binary.colors(grains, quats)
         im = mark_boundaries(im, grains, color=[0,0,0])
-    elif colors == 'quaternion':
-        quats = meso.io.load_quaternions(infile)
+    elif colorscheme == 'quaternion':
+        quats = meso.io.load_quaternions(initial)
         raise NotImplementedError('quaternion color scheme not yet implemented')
-    elif colors == 'discrete':
-        texture_components = meso.io.load_colors(infile)
+    elif colorscheme == 'discrete':
+        texture_components = meso.io.load_colors(initial)
         cmap = {idx: c for idx, c in enumerate(np.unique(texture_components))}
         im = np.zeros_like(grains)
         for grain_idx in np.unique(grains):
@@ -53,6 +40,18 @@ def draw(infile, outfile, colors, display):
         boundaries = find_boundaries(grains)
         im[boundaries] = -1
 
+    return im
+
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.argument('infile', type=click.Path(exists=True))
+@click.option('-o', '--outfile', default='', type=click.Path(), help='output file')
+@click.option('-c', '--colorscheme', default='none', type=click.Choice(['none', 'binary', 'quaternion', 'discrete']))
+@click.option('-d', '--display', is_flag=True, help='show the microstructure in an X window')
+def draw(infile, outfile, colorscheme, display):
+    """ Draw a 2D microstructure from the Dream3d INFILE"""
+
+    im = render_microstructure(infile, initial=infile, colorscheme=colorscheme)
     plt.imshow(im, interpolation='none', origin='lower')
 
     if outfile is not '':
@@ -66,14 +65,11 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.argument('snapshots', nargs=-1, type=click.Path(exists=True))
 @click.option('-i', '--initial', type=click.Path(exists=True))
 @click.option('-o', '--outfile', default='grains.mov', type=click.Path(), help='output file')
-@click.option('-c', '--colors', default='none', type=click.Choice(['none', 'binary', 'quaternion']))
-def animate(snapshots, initial, outfile, colors):
+@click.option('-c', '--colorscheme', default='none', type=click.Choice(['none', 'binary', 'quaternion', 'discrete']))
+def animate(snapshots, initial, outfile, colorscheme):
     """ Animate a 2D grain growth simulation.
     Sorted file names should indicate temporal ordering. 
     """
-
-    # get quaternions from the simulation input file
-    quats = meso.io.load_quaternions(initial)
 
     tmpdir = 'temp'
     try:
@@ -92,15 +88,7 @@ def animate(snapshots, initial, outfile, colors):
     
     for snapshot, png in zip(snapshots, png_paths):
         print('processing {}'.format(snapshot))
-        grains = meso.io.load_dream3d(snapshot)
-        if colors == 'none':
-            im = grains / np.max(grains)
-        elif colors == 'binary':
-            im = meso.binary.colors(grains, quats)
-        elif colors == 'quaternion':
-            raise NotImplementedError('quaternion color scheme not yet implemented')
-    
-        im = mark_boundaries(im, grains, color=[0,0,0])
+        im = render_microstructure(snapshot, initial=initial, colorscheme=colorscheme)        
         plt.imshow(im, interpolation='none', origin='lower')
         plt.savefig(png)
         plt.clf()
