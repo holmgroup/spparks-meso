@@ -19,11 +19,17 @@ from skimage.segmentation import mark_boundaries, find_boundaries
 import meso.io
 from meso.binary import colors
 
+
 def render_microstructure(infile, initial=None, colorscheme='none'):
     grains = meso.io.load_dream3d(infile)
     if colorscheme == 'none':
         im = grains / np.max(grains)
         im = mark_boundaries(im, grains, color=[0,0,0])
+    elif colorscheme == 'boundaries':
+        plt.gray()
+        im = np.ones_like(grains)
+        boundaries = find_boundaries(grains)
+        im[boundaries] = 0
     elif colorscheme == 'binary':
         quats = meso.io.load_quaternions(initial)
         im = meso.binary.colors(grains, quats)
@@ -38,7 +44,7 @@ def render_microstructure(infile, initial=None, colorscheme='none'):
         for grain_idx in np.unique(grains):
             im[grains == grain_idx] = cmap[texture_components[grain_idx]]
         boundaries = find_boundaries(grains)
-        im[boundaries] = -4
+        im[boundaries] = -6
 
     return im
 
@@ -47,8 +53,8 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.argument('infile', type=click.Path(exists=True))
 @click.option('-i', '--initial', type=click.Path(exists=True), default=None)
 @click.option('-o', '--outfile', default='', type=click.Path(), help='output file')
-@click.option('-c', '--colorscheme', default='none', type=click.Choice(['none', 'binary', 'quaternion', 'discrete']))
-@click.option('-d', '--display', is_flag=True, help='show the microstructure in an X window')
+@click.option('-c', '--colorscheme', default='none', type=click.Choice(['none', 'boundaries', 'binary', 'quaternion', 'discrete']))
+@click.option('--display/--no-display', default=True, help='show the microstructure in an X window')
 def draw(infile, initial, outfile, colorscheme, display):
     """ Draw a 2D microstructure from the Dream3d INFILE"""
 
@@ -64,16 +70,19 @@ def draw(infile, initial, outfile, colorscheme, display):
         plt.show()
     return
 
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('snapshots', nargs=-1, type=click.Path(exists=True))
 @click.option('-i', '--initial', type=click.Path(exists=True))
 @click.option('-o', '--outfile', default='grains.mov', type=click.Path(), help='output file')
-@click.option('-c', '--colorscheme', default='none', type=click.Choice(['none', 'binary', 'quaternion', 'discrete']))
+@click.option('-c', '--colorscheme', default='none', type=click.Choice(['none', 'boundaries', 'binary', 'quaternion', 'discrete']))
 def animate(snapshots, initial, outfile, colorscheme):
     """ Animate a 2D grain growth simulation.
     Sorted file names should indicate temporal ordering. 
     """
+    # keep consistent color scheme across frames during animation
+    vmin, vmax = None, None
 
     tmpdir = 'temp'
     try:
@@ -92,8 +101,13 @@ def animate(snapshots, initial, outfile, colorscheme):
     
     for snapshot, png in zip(snapshots, png_paths):
         print('processing {}'.format(snapshot))
-        im = render_microstructure(snapshot, initial=initial, colorscheme=colorscheme)        
-        plt.imshow(im, interpolation='none', origin='lower')
+        im = render_microstructure(snapshot, initial=initial, colorscheme=colorscheme)
+        
+        if colorscheme == 'discrete' or colorscheme == 'none' and vmin is None:
+            vmin = np.min(im)
+            vmax = np.max(im)
+        
+        plt.imshow(im, interpolation='none', origin='lower', vmin=vmin, vmax=vmax)
         plt.savefig(png)
         plt.clf()
 
