@@ -22,7 +22,7 @@ def equivalent_grain_radius(grains):
     d = grains.ndim
     f = 1/np.pi if d == 2 else 3/(4*np.pi)
     r = [np.power(f*np.sum(grains==id),1/d) for id in ids]
-    return np.array(r) / np.mean(r)
+    return np.mean(r)
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -46,7 +46,8 @@ def bigcandidate(infile, outfile, size, redprob, randomize):
     # make the candidate grain ${size} times bigger than the average grain
     avg_radius = equivalent_grain_radius(grain_ids)
     candidate_radius = size*avg_radius
-
+    print(candidate_radius)
+    
     # create a spherical mask...
     s = np.array(grain_ids.shape) / 2
     if grain_ids.ndim == 3:        
