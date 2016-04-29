@@ -50,10 +50,10 @@ def bigcandidate(infile, outfile, size, redprob, randomize):
     # create a spherical mask...
     s = np.array(grain_ids.shape) / 2
     if grain_ids.ndim == 3:        
-        z,y,x = np.ogrid[-s[0]:s[0]+1, -s[1]:s[1]+1, -s[2]:s[2]+1]
+        z,y,x = np.ogrid[-s[0]:s[0], -s[1]:s[1], -s[2]:s[2]]
         mask = z*z + y*y + x*x < candidate_radius*candidate_radius
     if grain_ids.ndim == 2:        
-        y,x = np.ogrid[-s[0]:s[0]+1, -s[1]:s[1]+1]
+        y,x = np.ogrid[-s[0]:s[0], -s[1]:s[1]]
         mask = y*y + x*x < candidate_radius*candidate_radius
         
     # special grain gets spin == 1
