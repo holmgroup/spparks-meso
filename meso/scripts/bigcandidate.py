@@ -44,8 +44,7 @@ def bigcandidate(infile, outfile, size, redprob, randomize):
 
 
     # make the candidate grain ${size} times bigger than the average grain
-    avg_radius = equivalent_grain_radius(grain_ids)
-    candidate_radius = size*avg_radius
+    candidate_radius = size * equivalent_grain_radius(grain_ids)
     print(candidate_radius)
     
     # create a spherical mask...
