@@ -36,7 +36,7 @@ def networks(snapshots, outfile):
     for key, snapshot in zip(keys, snapshots):
         grains = meso.io.load_dream3d(snapshot)
         network = meso.network.transgranular_network(grains)
-        edges = np.array([list(edge) for edge in network.edges_iter()])
+        edges = np.array([list(edge) for edge in network.edges()])
         with h5py.File(outfile, 'r+') as f:
             f[key] = edges
 
