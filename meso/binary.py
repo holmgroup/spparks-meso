@@ -56,7 +56,7 @@ def list_binary_texture(grains, candidates=[1], blues=[]):
     return quats
 
 
-def colors(grains, quats, boundaries=True):
+def colors(grains, quats, boundaries=False):
     color_map = {1: np.array([1.0, 1.0, 1.0]),
                  2: np.array([.45, .57, 0.63]),
                  3: np.array([0.6, 0.0, 0.0])}

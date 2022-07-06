@@ -1,0 +1,10 @@
+#!/home/meso/env/bin/python
+# EASY-INSTALL-ENTRY-SCRIPT: 'meso==0.1','console_scripts','meso'
+__requires__ = 'meso==0.1'
+import sys
+from pkg_resources import load_entry_point
+
+if __name__ == '__main__':
+    sys.exit(
+        load_entry_point('meso==0.1', 'console_scripts', 'meso')()
+    )

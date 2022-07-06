@@ -9,4 +9,10 @@ setup(name='meso',
       author_email='bdecost@andrew.cmu.edu',
       license='MIT',
       packages=['meso'],
-      zip_safe=False)
+      zip_safe=False,
+      entry_points={
+          'console_scripts': [
+              'meso=meso.cli:cli'
+              ]
+          }
+      )

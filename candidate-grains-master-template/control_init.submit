@@ -1,0 +1,80 @@
+#!/bin/bash
+#SBATCH -J AGGcontrol-init
+#SBATCH --ntasks 1
+#SBATCH --cpus-per-task 1
+#SBATCH --partition=batchhr
+#SBATCH --array 1
+#SBATCH --output=control_initial/AGGcontrol-%a-%A.stdout
+
+# for now, limited to 1000 array jobs
+# until I figure out how MaxArraySize works
+BATCHNUMBER=${1}
+ARRAYSIZE=1
+
+echo "batch ${BATCHNUMBER}"
+echo making test directory
+
+START=$(date)
+echo ${START}
+JOBHANDLE=AGGcontrol-${SLURM_ARRAY_JOB_ID}-${SLURM_ARRAY_TASK_ID}
+SCRATCH=/mnt/local/brian/${JOBHANDLE}
+let RESULTS_ID=(${BATCHNUMBER}*${ARRAYSIZE})+${SLURM_ARRAY_TASK_ID}
+RESULTS=${SLURM_SUBMIT_DIR}/control_results/run_${RESULTS_ID}
+LOCKFILE=${RESULTS}/agg_model.lock
+
+if [ -f ${RESULTS}/initial.dream3d ]
+then
+    echo "initial structure exists; exiting"
+    exit 0
+fi
+
+mkdir -p ${SCRATCH}
+mkdir -p ${RESULTS}
+echo ${JOBHANDLE} >> ${RESULTS}/output_path.txt
+
+cd ${SCRATCH}
+
+. /etc/profile.d/modules.sh
+module load python/3.4
+module load gcc/4.9.3
+module load mpich
+module load spparks/2013.11.19
+module load ffmpeg
+
+# disallow uninitialized variables
+# note: triggers error when loading /etc/profile.d/modules.sh
+set -o nounset
+
+function seed_spparks ()
+{
+    SPK_SEED_MIN=1
+    # SPK_SEED_MAX=$(bc <<< "2^31 - 1")
+    SPK_SEED_MAX=2147483647
+    NEW_SEED=$(shuf -n 1 -i ${SPK_SEED_MIN}-${SPK_SEED_MAX})
+    echo "seed ${NEW_SEED}" > ${1}
+}
+
+
+# seed_spparks grow_initial.spkin
+INIT_FILE=grow_initial.spkin
+seed_spparks ${INIT_FILE}
+cat ${SLURM_SUBMIT_DIR}/init_template.spkin >> ${INIT_FILE}
+spparks -in ${INIT_FILE}
+mv log.spparks init_spparks.log
+
+
+# python ${SLURM_SUBMIT_DIR}/candidate -i initial0.dream3d -o initial.dream3d -s 1.8 -r 0.3
+# specify negative size cutoff to pick the largest grain
+# --randomize selects a random texture on the interval (0,r)
+meso candidate initial0.dream3d -o initial.dream3d -s -1.0 -r 0.0
+
+for f in ${INIT_FILE} init_spparks.log initial.dream3d
+do
+    cp ${f} ${RESULTS}
+done
+
+cd ${SLURM_SUBMIT_DIR}
+rm -r ${SCRATCH}
+
+echo "start: ${START}"
+echo "end: $(date)"
