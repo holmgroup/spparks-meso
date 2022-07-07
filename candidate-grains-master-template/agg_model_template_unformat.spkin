@@ -9,12 +9,12 @@ precompute    	 mobility
 solve_style      tree
 sector		 no
 
-temperature	 0.9
+temperature	 {}
 
-stats            2000.0
+stats            {}
 diag_style	 grainsize filename stats.h5
 dump		 1 dream3d 5000 agg_dump*.dream3d id site version 6.0 dataset SyntheticVolume
 dump_modify	 1 pad 7
 
-run              2000000.0  # changed number of monte carlo steps
+run              {}  # changed number of monte carlo steps
 

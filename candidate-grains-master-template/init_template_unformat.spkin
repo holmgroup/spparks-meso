@@ -1,10 +1,10 @@
-variable systemsize equal 256 # default: 512
-variable	 volume equal ${systemsize}*${systemsize}
+variable systemsize equal {} 
+variable	 volume equal ${{systemsize}}*${{systemsize}}
 
-app_style	 potts ${volume}
+app_style	 potts ${{volume}}
 dimension	 2
 lattice		 sq/8n 1.0
-region		 box block 0 ${systemsize} 0 ${systemsize} -0.5 0.5
+region		 box block 0 ${{systemsize}} 0 ${{systemsize}} -0.5 0.5
 create_box	 box
 create_sites	 box
 set		 site unique

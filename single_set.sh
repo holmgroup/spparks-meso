@@ -1,14 +1,15 @@
 #!/bin/bash
 
-ntrial=2 # number of repeated trials for single initial structure
-redfrac=0.2 # initial fraction of red grains
+ntrial=${1} # number of repeated trials for single initial structure
+redfrac=${2} # initial fraction of red grains
+job_id=${3}  # number to give job
+animate=${4} # 1 if grains.mov file should be created, otherwise 0
 
-timestamp=$(date +"%Y-%m-%d-%H-%M-%S-%N") # timestamp for file name
 seeds=($(shuf -n ${ntrial} -i 1-2147483647)) # unique, randomly selected seeds for each grain growth trial
 
-exp_dir="$(pwd)/run-${timestamp}" # directory for set of trials
+exp_dir="$(pwd)/run-${job_id}" # directory for set of trials
 finished_dir="$(pwd)/finished"
-mkdir ${finished_dir}
+mkdir -p ${finished_dir}
 TIMESTAMPS="${exp_dir}/runtimes.txt" # for recording time required to run each simulation
 
 cp -r  candidate-grains-master-template ${exp_dir} # copy code only (ie no initial states/results)
@@ -34,8 +35,7 @@ spparks -in ${INIT_FILE} # run the simulation
 mv log.spparks init_spparks.log
 # note default -s is -0.5, not 0.5
 
-
-meso candidate initial0.dream3d -o initial.dream3d -s -0.5 -r $redfrac
+meso candidate initial0.dream3d -o initial.dream3d -s -0.5 -r ${redfrac}
 echo "initialize: ${SECONDS}" >> ${TIMESTAMPS}
 SPPARKS_INIT=${exp_dir}/spparks_init
 mkdir -p ${SPPARKS_INIT}
@@ -58,20 +58,27 @@ GROW_FILE=agg_model.spkin
 for i in $(seq 1 ${ntrial})
 do
   mkdir ${SCRATCH}
-  cd ${SCRATCH}
+  cd ${SCRATCH} 
   # bash is 0-indexed. remember to avoid off-by-1 error when indexing!
   echo "seed ${seeds[$(expr ${i}-1)]}" > ${GROW_FILE} # set seed for trial
   cat ${exp_dir}/agg_model_template.spkin >> ${GROW_FILE}
   SECONDS=0 # reset timer
   cp ${SPPARKS_INIT}/* . # copy all required outputs from initial microstructure creation to scratch
   spparks -in ${GROW_FILE} # run spparks
-  mv log.spparks grow_spparks.log # rename log
-  # animation and formatted outputs
-  meso animate agg_dump*.dream3d -o grains.mov --initial initial.dream3d --colorscheme binary
-  meso networks agg_dump*.dream3d -o network.h5
   echo "run-${i}: ${SECONDS}" >> ${TIMESTAMPS}
+  SECONDS=0
+  mv log.spparks grow_spparks.log # rename log
+  if [ ${animate} = "1" ];
+  then
+    # animation and formatted outputs
+    meso animate agg_dump*.dream3d -o grains.mov --initial initial.dream3d --colorscheme binary
+    # meso networks agg_dump*.dream3d -o network.h5
+    mv grains.mov ${exp_dir}/spparks_results/run_${i}
+    echo "animate-${i}: ${SECONDS}" >> ${TIMESTAMPS}
+  fi
+  
   # archive outputs 
-  for f in ${GROW_FILE} grow_spparks.log stats.h5 grains.mov
+  for f in ${GROW_FILE} grow_spparks.log stats.h5
   do
     mv ${f} ${exp_dir}/spparks_results/run_${i}
   done
@@ -86,4 +93,5 @@ done
 # mv AGG_repeat-errors-${SLURM_JOB_ID}.stderr ${exp_dir}
 
 # archive results
+cd ${HOME}
 mv ${exp_dir} ${finished_dir}

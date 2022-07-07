@@ -40,8 +40,14 @@ RUN cp meso/usr-bin-meso /usr/bin/meso
 USER meso
 COPY --chown=meso:meso candidate-grains-master-template candidate-grains-master-template
 COPY --chown=meso:meso single_set.sh single_set.sh
+COPY --chown=meso:meso parse_args.py parse_args.py
+COPY --chown=meso:meso run_job.sh run_job.sh
 
 # needed or else python will try to use ASCII and error out on meso command
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
 
+# 
+VOLUME /home/meso/finished
+
+ENTRYPOINT ["bash", "run_job.sh"]
