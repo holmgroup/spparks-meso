@@ -1,4 +1,5 @@
-# stort with working spparks binary
+# start with working spparks binary
+# Dockerfile in https://github.com/holmgroup/spparks
 FROM spparks-candidate-grains:latest
 
 USER root

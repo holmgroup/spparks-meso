@@ -12,7 +12,7 @@ def parse_inputs():
     default_start_id=1
     default_log_iter=2000
 
-    parser = argparse.ArgumentParser(description="Parse command line inputs for running candidate grain Monte Carlo simulations of abnormal grain growth.")
+    parser = argparse.ArgumentParser(description="Parse command line inputs for running candidate grain Monte Carlo simulations of abnormal grain growth. Outputs of simulations are stored in /home/meso/finished.")
 
     parser.add_argument('--n-init', dest='n_init', action='store', default=default_n_init,
             help='Number of initial microstructures to generate, default={}.'.format(default_n_init))

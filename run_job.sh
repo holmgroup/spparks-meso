@@ -8,7 +8,8 @@
 # 3: fraction of red grains in each initial state
 # 4: start id of job (determines filename for saving)
 # 5: 1 if animation script should be run, 0 otherwise
-x=$(python parse_args.py $@ )
+cd /home/meso/
+x=$(python parse_args.py $@ ) 
 xarr=( ${x} ) # store as array to test if help was called
 
 if [ "${xarr[0]}" = "usage:" ]; then
