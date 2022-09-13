@@ -8,8 +8,7 @@
 # 3: fraction of red grains in each initial state
 # 4: start id of job (determines filename for saving)
 # 5: 1 if animation script should be run, 0 otherwise
-cd /home/meso/
-x=$(python parse_args.py $@ ) 
+x=$(python /home/meso-home/parse_args.py $@ ) 
 xarr=( ${x} ) # store as array to test if help was called
 
 if [ "${xarr[0]}" = "usage:" ]; then
@@ -30,6 +29,6 @@ do
 	job_id_format=$(python -c "print(f'{${job_id_unformat}:06d}')")  
 
 	# run single set of growht simulations for 1 initial microstructure
-	. single_set.sh ${ntrial} ${redfrac} ${job_id_format} ${animate}
+	. /home/meso-home/candidate_grains.sh ${ntrial} ${redfrac} ${job_id_format} ${animate}
 
 done

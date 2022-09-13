@@ -44,7 +44,7 @@ def parse_inputs():
 
 def update_templates(args):
 
-    template_dir = 'candidate-grains-master-template'
+    template_dir = '/home/meso-home/candidate-grains-master-template'
 
     # update init template to include correct system size
     with open('{}/init_template_unformat.spkin'

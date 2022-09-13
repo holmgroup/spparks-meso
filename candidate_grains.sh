@@ -7,12 +7,13 @@ animate=${4} # 1 if grains.mov file should be created, otherwise 0
 
 seeds=($(shuf -n ${ntrial} -i 1-2147483647)) # unique, randomly selected seeds for each grain growth trial
 
-exp_dir="$(pwd)/run-${job_id}" # directory for set of trials
-finished_dir="$(pwd)/finished"
-mkdir -p ${finished_dir}
+# absolute paths needed for compatibility with Singularity
+exp_dir="/home/meso-home/runs/run-${job_id}" # directory for set of trials
+template_dir="/home/meso-home/candidate-grains-master-template"
+
 TIMESTAMPS="${exp_dir}/runtimes.txt" # for recording time required to run each simulation
 
-cp -r  candidate-grains-master-template ${exp_dir} # copy code only (ie no initial states/results)
+cp -r  ${template_dir} ${exp_dir} # copy code only (ie no initial states/results)
 
 # scratch is a temp directory where all dump files are stored before processing
 # results is where the outputs (ie stats.h5) are stored
@@ -41,8 +42,9 @@ SPPARKS_INIT=${exp_dir}/spparks_init
 mkdir -p ${SPPARKS_INIT}
 for f in initial.dream3d $INIT_FILE init_spparks.log
 do
-mv $f ${SPPARKS_INIT}/
+    mv $f ${SPPARKS_INIT}/
 done
+
 cd ${exp_dir}
 rm -rf ${SCRATCH}
 
@@ -85,13 +87,3 @@ do
   cd ${exp_dir}
   rm -rf ${SCRATCH} ${exp_dir}/temp
 done
-
-
-# archive the slurm output/stderr (note- this doesn't actually work right now, maybe slurm can't access
-# its own log files?)
-# mv AGG_repeat-outputs-${SLURM_JOB_ID}.stdout ${exp_dir}
-# mv AGG_repeat-errors-${SLURM_JOB_ID}.stderr ${exp_dir}
-
-# archive results
-cd ${HOME}
-mv ${exp_dir} ${finished_dir}

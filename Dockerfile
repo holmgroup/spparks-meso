@@ -1,54 +1,54 @@
 # start with working spparks binary
 # Dockerfile in https://github.com/holmgroup/spparks
-FROM spparks-candidate-grains:latest
+FROM spparks-candidate-grains:latest AS main
 
-USER root
- # install dependencies
-RUN apt-get update && apt-get -y --no-install-recommends install \
-	ca-certificates \
-	software-properties-common \
-	python3-venv \
-	python3-dev \
-	ffmpeg \
-    && apt-get clean \
-	&& apt-get autoremove \
-	&& rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates build-essential git wget ffmpeg && apt-get clean && apt-get autoremove && \
+      rm -rf /var/lib/apt/lists/* && \
+      wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
+      bash Miniconda3-latest-Linux-x86_64.sh -b -p /usr/local/share/miniconda && \
+      rm -rf Miniconda3-latest-Linux-x86_64.sh
 
-WORKDIR /home/root/
+WORKDIR /home/meso-home
+COPY env.yaml setup.py candidate_grains.sh parse_args.py entrypoint.sh ./
+COPY meso meso
+COPY candidate-grains-master-template candidate-grains-master-template
 
-# spparks-candidate-grains already defines UID1000 so start at 1001
-RUN groupadd --gid=1001 meso \
-    && useradd --uid 1001 --gid 1001 -m meso
+# create venv, install dependencies, install meso, copy binary
+# to /usr/bin, and make it executible
+RUN /usr/local/share/miniconda/bin/conda env create --name meso-env -f env.yaml && \
+    /usr/local/share/miniconda/envs/meso-env/bin/python -m pip install . && \
+    rm env.yaml && \
+    cp meso/usr-bin-meso /usr/bin/meso && \
+    chmod +x entrypoint.sh && \
+    mkdir runs
 
-ENV HOME=/home/meso
-WORKDIR ${HOME}
+# add python for meso to path
+# also set language encoding needed for CLI to work properly
+ENV PATH="/usr/local/share/miniconda/envs/meso-env/bin:${PATH}" \
+    LANG_ALL=C.UTF-8 LANG=C.UTF-8
 
-USER meso
-COPY requirements.txt requirements.txt
-RUN python3 -m venv env
-ENV PATH="${HOME}/env/bin:${HOME}/.local/bin:${PATH}"
-RUN python3 -m pip install -r requirements.txt
+# needed for singularity compatibility
+RUN chmod -R 777 /home/meso-home
 
-COPY --chown=meso:meso meso meso
-COPY --chown=meso:meso setup.py setup.py
-RUN pip install .
+ENTRYPOINT ["/home/meso-home/entrypoint.sh"]
 
-USER root
-RUN chmod o+x meso/usr-bin-meso
-RUN cp meso/usr-bin-meso /usr/bin/meso
+# build su-exec for handling permissions
+FROM debian:10.12-slim AS builder
+RUN apt-get update && apt-get install -y \
+    build-essential git && \
+    rm -rf /var/lib/apt/lists/* && \
+    # download the source for su-exec
+    cd /home/ && git clone https://github.com/ncopa/su-exec.git && \
+    # build su-exec and move the binary to /usr/local/sbin
+    cd su-exec && make su-exec && mv su-exec /usr/local/sbin && \
+    # remove the remaining files when we are done
+    rm -rf /home/su-exec
 
+FROM main AS nonroot
+COPY --from=builder /usr/local/sbin/su-exec /usr/local/sbin/su-exec
 
-USER meso
-COPY --chown=meso:meso candidate-grains-master-template candidate-grains-master-template
-COPY --chown=meso:meso single_set.sh single_set.sh
-COPY --chown=meso:meso parse_args.py parse_args.py
-COPY --chown=meso:meso run_job.sh run_job.sh
+COPY entrypoint_nonroot.sh ./
+RUN chmod +x entrypoint_nonroot.sh
+ENTRYPOINT ["./entrypoint_nonroot.sh"]
 
-# needed or else python will try to use ASCII and error out on meso command
-ENV LC_ALL=C.UTF-8 \
-    LANG=C.UTF-8
-
-# 
-VOLUME /home/meso/finished
-
-ENTRYPOINT ["bash", "run_job.sh"]

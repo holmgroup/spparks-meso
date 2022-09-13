@@ -10,17 +10,17 @@ This project implements the python portion of the *candidate grain* simulations 
 Afterwards, the meso utility can be built by simply running:
 
 ```bash
-$ docker build -t meso .
+$ docker build --target main -t meso:main .
 ```
 
 Many HPC systems use [Singularity](https://docs.sylabs.io/guides/3.5/user-guide/introduction.html) instead of Docker. (NOTE: The image is currently incompatible with singularity and can currently only be used with Docker. See "Known issues" section below.) The most straightforward way to build the singularity image is to build and export the image from a machine that has Docker, and then use singularity to convert it to the correct format. After building the image with the above command, export the container to a file:
 ```bash
-$ docker save -o meso.tar meso:latest
+$ docker save -o meso.tar meso:main
 ```
 Next, copy the image to a machine with singularity. The image can be converted to a singularity **.sif** file with the following command:
 
 ```bash
-$ singularity build meso.sif docker-archive:./meso.tar
+$ singularity build meso.sif docker-archive://meso.tar
 ```
 
 # Generating simulations.
@@ -38,7 +38,7 @@ $ singularity build meso.sif docker-archive:./meso.tar
 The default entrypoint of the container calls the required binaries required to run and process simulations. Thus, you only need to pass the desired arguments to the container. A list of arguments, along with their syntax, descriptions, and default values, can be obtained by running the container with the -h or --help options. For example:
 
 ```bash
-$ docker run --rm meso -h
+$ docker run --rm meso:main -h
 ```
 The outputs are saved in a directory in the container (/home/meso/finished) and can be transferred from the container to the host machine.
 
@@ -47,39 +47,68 @@ The output is a directory named 'run-XXXXXX', where XXXXXX is a zero-padded inte
 The output contains the spparks input deck (including random seed) used for each simulation, the results/outputs of each simulation, and some additional logs.
 
 ## Run with Docker
-First, create a directory that the docker container has sufficient write permissions to. This is where the results will be saved. 
+First, create a directory to save the results to.
 ```bash
-$ mkdir results && chmod 777 results
+$ mkdir results 
 ```
 
 To generate simulations:
 ```bash
 $ docker run --rm \
-         -v $(pwd)/results:/home/meso/finished:rw \
-         meso [args]
+         -v $(pwd)/results:/home/meso-home/runs:rw \
+         meso:main [args]
 ```
 Summary of `docker run` arguments:
   - `--rm`: removes container after it executes, preventing clutter
   - `-v $(pwd)/results:/home/meso/finished:rw`: mounts the directory for saving the results.
-  - `meso`: name of the docker image to run.
+  - `meso:main`: name and tag of the docker image to run.
   - `[args]`: optional arguments for changing the run parameters, see `$ docker run --rm meso -h` for more info.
 
-## Run with Singularity
-NOTE: The image is currently incompatible with singularity and can currently only be used with Docker. See "Known issues" section below.
-
-Running with Singularity is very straightforward:
+**Note:** By default, the container runs as root to have sufficient permissions to write to the bind mount. To access the results without elevated permissions, you will have to change the ownership. On the host machine:
 ```bash
-$ singularity run meso.sif [args]
+$ sudo chown -R $(whoami) results
 ```
-Note that Singularity bind mounts `/home/$USER`, `/tmp`, and `$PWD` into the container at runtime, so no explicit mount commands are needed, unlike with Docker. 
+## Run with  Docker without 
+It is desirable to not have to manually change permissions after running simulations. Handling non-root users with bind-mounts requires some extra [steps](https://denibertovic.com/posts/handling-permissions-with-docker-volumes/) and would likely break compatiblity with Singularity. Because of this, better handling of the permissions of the bind mount is handled as a separate build stage in the Dockerfile. To build the image:
+```bash
+$ docker build --target nonroot -t meso:nonroot . 
+```
+Of course, we still need a folder to save the results to:
+```bash
+$ mkdir results
+```
+The UID of the user on the host needs to be passed to the container so that the ownership of the mounted directory can be matched at runtime. To run the container:
+```bash
+$ docker run --rm -e USER_UID=${UID} \
+    -v $(pwd)/results:/home/meso-home/runs:rw  \
+    meso:nonroot [args]
+```
+Explanation of `docker run` options:
+  - `-e USER_UID=${UID}`: pass UID from host to container
+  - `-v $(pwd)/results:/home/meso-home/runs:rw`: mount directory on host to save simulation results to
 
-# Known issues
- 
- |Issue                                           |     Description              |
- |------------------------------------------------|------------------------------|
- | Segfault after initial microstructure creation | After generating the initial microstructures, SPPARKS will throw a segfault error. However, this appears to be with some unused post-processing routine, as the simulations still run and the outputs still contain all of the expected data.                                                  
- |Singularity incompatibility                     | the image will build without error, but raise "file not found" or "read only file system" errors when run. The issue appears to be related to how Singularity treats (or, more precisely, doesn't treat) the "workdir" and "user" directives. Because singularity executes in the current directory on the host machine, it will not find local files in the workdir of the docker image without absolute paths. Similarly, the container appears to run as the user on the host machine instead of the user specified in the Dockerfile. Thus, file permissions do not work correctly. Both of these issues can be corrected, but require fixing all the paths and changing permissions, so we will hold off on this for now. If you need this functionality feel free to put a request in the issue tracker to bump up the priority.                   |
+## Run with Singularity
+We will need a directory on the host to save the results to
+```bash
+$ mkdir results
+```
 
+Singularity also requires an [overlay](https://docs.sylabs.io/guides/3.5/user-guide/persistent_overlays.html) to be created to write the results of the simulation to the container. 
+```bash
+# creates a 500MB overlay image. You may need to adjust the size depending on your application.
+$ mkdir -p overlay/upper overlay/work
+$ dd if=/dev/zero of=overlay.img bs=1M count=500 && \
+     mkfs.ext3 -d overlay overlay.img
+```
+To run the container:
+```bash
+$ singularity run --overlay overlay.img -B "results:/home/meso-home/runs:rw"  meso.sif [args]
+```
+Explanation of command:
+ - `--overlay overlay.img` enables the writeable layer in the container (without it you will get a runtime error)
+ - `-B "results:/home/meso-home/runs:rw"` binds the output folder in the container `/home/meso-home/runs` to `results/` on the host and gives read/write permissions, allowing the container to save the finished simulations to the host.
+
+After executing, the finished simulations will be in `results/` on the host.
 # References 
 <a id="1">[1]</a>
 DeCost, B.L., Holm, E.A. Phenomenology of Abnormal Grain Growth in Systems with Nonuniform Grain Boundary Mobility. *Metall Mater Trans A* 48, 2771–2780 (2017).  [doi:10.1007/s11661-016-3673-6](https://doi.org/10.1007/s11661-016-3673-6)
