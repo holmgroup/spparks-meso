@@ -68,7 +68,7 @@ Summary of `docker run` arguments:
 ```bash
 $ sudo chown -R $(whoami) results
 ```
-## Run with  Docker without 
+## Run with  Docker with nonroot bind mount
 It is desirable to not have to manually change permissions after running simulations. Handling non-root users with bind-mounts requires some extra [steps](https://denibertovic.com/posts/handling-permissions-with-docker-volumes/) and would likely break compatiblity with Singularity. Because of this, better handling of the permissions of the bind mount is handled as a separate build stage in the Dockerfile. To build the image:
 ```bash
 $ docker build --target nonroot -t meso:nonroot . 
