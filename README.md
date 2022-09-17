@@ -6,11 +6,16 @@ This project implements the python portion of the *candidate grain* simulations 
 
 #  Installation 
 
-[Docker](https://www.docker.com/) is the preferred method of installation. Note that the *spparks-candidate-grains* image is the single dependency of this project. To build and test the *spparks-candidate-grains* image, follow the installation instructions in https://github.com/holmgroup/spparks. 
-Afterwards, the meso utility can be built by simply running:
+[Docker](https://www.docker.com/) is the preferred method of installation. The meso utility can be built by simply running:
 
 ```bash
 $ docker build --target main -t meso:main .
+```
+
+There is also a version that works better when using bind mounts to store the results on the host (more info below). To build this version:
+
+```bash
+$ docker build --target nonroot -t meso:nonroot.
 ```
 
 Many HPC systems use [Singularity](https://docs.sylabs.io/guides/3.5/user-guide/introduction.html) instead of Docker. (NOTE: The image is currently incompatible with singularity and can currently only be used with Docker. See "Known issues" section below.) The most straightforward way to build the singularity image is to build and export the image from a machine that has Docker, and then use singularity to convert it to the correct format. After building the image with the above command, export the container to a file:

@@ -13,6 +13,8 @@ import os
 import click
 import subprocess
 import numpy as np
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from skimage.segmentation import mark_boundaries, find_boundaries
 
